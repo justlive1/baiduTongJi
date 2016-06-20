@@ -1,0 +1,117 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'eclipse'
+
+group = 'cn.datek'
+version = '1.0.0-SNAPSHOT'
+
+description = """"""
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+tasks.withType(JavaCompile) {  
+    options.encoding = 'UTF-8'  
+}
+
+def nexus_repo = 'http://repo.datek.cn/nexus/content/groups/public'
+
+repositories {   
+	mavenCentral()
+    maven{url nexus_repo}	
+}
+
+configurations {
+	// exclude commons-logging, log4j, and j.u.logging - we use slf4j and logback
+	// http://spring-java-ee.posterous.com/gradle-build-for-spring-framework-and-slf4j-w
+	all*.exclude group: 'commons-logging'
+	all*.exclude group: 'log4j'
+
+	// exclude aspectj
+	//all*.exclude group: 'org.aspectj'
+	//	compile 'javax.validation:validation-api:1.0.0.GA'
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+
+dependencies {
+   
+    //spring
+	compile  'org.springframework:spring-aop:4.2.3.RELEASE'
+	compile  'org.springframework:spring-web:4.2.3.RELEASE'
+	compile  'org.springframework:spring-context:4.2.3.RELEASE'
+	compile  'org.springframework:spring-context-support:4.2.3.RELEASE'
+	compile  'org.springframework:spring-beans:4.2.3.RELEASE'
+	compile  'org.springframework:spring-core:4.2.3.RELEASE'
+	compile  'org.springframework:spring-expression:4.2.3.RELEASE'
+	compile  'org.springframework:spring-webmvc:4.2.3.RELEASE'
+	compile  'org.springframework:spring-tx:4.2.3.RELEASE'
+	compile  'org.springframework:spring-jdbc:4.2.3.RELEASE'
+	compile  'org.springframework:spring-orm:4.2.3.RELEASE'
+	compile  'org.springframework:spring-aspects:4.2.3.RELEASE'
+	compile  'org.springframework:spring-test:4.2.3.RELEASE'
+	
+	//
+	compile  'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+	compile  'org.codehaus.jackson:jackson-core-asl:1.9.13'
+	compile  'com.alibaba:fastjson:1.1.34'
+	
+	compile  'org.apache.commons:commons-collections4:4.0'
+	compile  'org.apache.commons:commons-collections4:4.0'
+	compile  'commons-lang:commons-lang:2.6'
+	compile  'org.apache.commons:commons-lang3:3.4'
+	compile  'commons-beanutils:commons-beanutils:1.9.2'
+	
+	//log
+	compile  'ch.qos.logback:logback-classic:1.0.12'
+	compile  'org.slf4j:slf4j-api:1.7.7'
+	compile  'org.slf4j:jcl-over-slf4j:1.7.7'
+	compile  'org.slf4j:log4j-over-slf4j:1.7.7'
+	compile  'org.slf4j:jul-to-slf4j:1.7.7'
+	
+	compile  'org.apache.httpcomponents:httpclient:4.3.5'
+	
+	compile  'org.projectlombok:lombok:1.16.6'
+	
+    testCompile 'junit:junit:4.12'
+}
+
+jar {
+	baseName= project.group+'.'+project.name
+	manifest.attributes provider: 'gradle'
+//	manifest.attributes 'Main-Class': 'cn.datek.pluto.file.Main'
+}
+
+task sourcesJar(type: Jar) {  
+	baseName= project.group+'.'+project.name
+    classifier = 'sources'  
+    from sourceSets.main.allSource  
+}  
+
+task cpRuntimeLib(type: Copy) {
+    into "lib"
+    from configurations.runtime
+}
+  
+artifacts {  
+    archives jar  
+    archives sourcesJar  
+}
+
+task addDependToManifest {
+	if(!configurations.runtime.isEmpty()) {
+		jar.manifest.attributes('Class-Path': ". pluto_lib/" + configurations.runtime.collect { it.name }.join(' pluto_lib/'))
+	}
+}
+
+jar.dependsOn += addDependToManifest 
+
+task copyDependencies(type: Copy) {
+	from configurations.runtime
+	destinationDir = file('build/libs/pluto_lib')
+}
+
+jar.dependsOn += copyDependencies
