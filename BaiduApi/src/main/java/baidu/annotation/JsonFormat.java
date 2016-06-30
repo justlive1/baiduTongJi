@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  * 该注解用于标识这些属性需要转换成指定的类<br>
  * 使用：对于包含此类属性的类，class和field上需要加上该注解<br>
  * 当数据结构为复杂类型，多层类嵌套时，仅当最底层 属性为json串时 value = true<br>
- * 不支持单一泛型
+ * 仅支持单一泛型
  * @author WB
  *
  */
